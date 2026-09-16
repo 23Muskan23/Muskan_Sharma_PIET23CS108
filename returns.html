@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Returns & Transfers · AV Room{% endblock %}
+{% block content %}
+
+<h1>Active loans</h1>
+<p class="text-muted">Return an item here, or transfer it to someone else without breaking the due date or availability tracking.</p>
+
+<div class="table-responsive">
+<table class="table align-middle">
+  <thead>
+    <tr><th>Item</th><th>Borrower</th><th>Out since</th><th>Due</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for l in loans %}
+    <tr class="{{ 'overdue-row' if l.due_date < today else '' }}">
+      <td>{{ l.unit.code }}<br><span class="text-muted small">{{ l.unit.item_type.name }}</span></td>
+      <td>{{ l.borrower.name }}<br><span class="text-muted small">{{ l.borrower.email }}</span></td>
+      <td>{{ l.checkout_date.strftime('%d %b') }}</td>
+      <td>{{ l.due_date.strftime('%d %b') }}</td>
+      <td>
+        {% if l.due_date < today %}
+          <span class="badge bg-danger">{{ (today - l.due_date).days }} day(s) overdue</span>
+        {% else %}
+          <span class="badge bg-success">On time</span>
+        {% endif %}
+      </td>
+      <td class="text-nowrap">
+        <a href="{{ url_for('return_loan', loan_id=l.id) }}" class="btn btn-sm btn-primary">Return</a>
+        <a href="{{ url_for('transfer_loan', loan_id=l.id) }}" class="btn btn-sm btn-outline-dark">Transfer</a>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="text-muted">No active loans right now.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

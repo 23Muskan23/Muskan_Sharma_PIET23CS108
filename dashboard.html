@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · AV Room{% endblock %}
+{% block content %}
+
+<div class="hero mb-4">
+  <h1>Dashboard</h1>
+  <p class="text-muted">A live view of the room — no more paper register, no more guessing.</p>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="num">{{ stats.available }}</div>
+      <div class="label">Available now</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="num">{{ stats.on_loan }}</div>
+      <div class="label">Currently out</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="num" style="color:{{ '#d94f3d' if stats.overdue_count else 'inherit' }}">{{ stats.overdue_count }}</div>
+      <div class="label">Overdue</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="num">{{ stats.total_units }}</div>
+      <div class="label">Total units tracked</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    {% if overdue %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title text-danger">⏰ Overdue — nudge these people</h5>
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Item</th><th>Borrower</th><th>Due</th><th>Days late</th><th></th></tr></thead>
+          <tbody>
+          {% for l in overdue %}
+            <tr class="overdue-row">
+              <td>{{ l.unit.code }} <span class="text-muted">({{ l.unit.item_type.name }})</span></td>
+              <td>{{ l.borrower.name }}<br><span class="text-muted small">{{ l.borrower.email }}</span></td>
+              <td>{{ l.due_date.strftime('%d %b') }}</td>
+              <td><strong>{{ l.days_overdue() }}</strong> day(s)</td>
+              <td><a href="{{ url_for('return_loan', loan_id=l.id) }}" class="btn btn-sm btn-outline-danger">Return</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if due_soon %}
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">🔔 Due back soon</h5>
+        <table class="table table-sm align-middle mb-0">
+          <thead><tr><th>Item</th><th>Borrower</th><th>Due</th><th></th></tr></thead>
+          <tbody>
+          {% for l in due_soon %}
+            <tr class="due-soon-row">
+              <td>{{ l.unit.code }}</td>
+              <td>{{ l.borrower.name }}</td>
+              <td>{{ l.due_date.strftime('%d %b') }}</td>
+              <td><a href="{{ url_for('return_loan', loan_id=l.id) }}" class="btn btn-sm btn-outline-secondary">Return</a></td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if not overdue and not due_soon %}
+    <div class="card"><div class="card-body text-muted">Nothing overdue or due soon. Room's in good shape 🎉</div></div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Stock by category</h5>
+        <canvas id="stockChart" height="220"></canvas>
+      </div>
+    </div>
+    <div class="d-grid gap-2 mt-3">
+      <a href="{{ url_for('checkout') }}" class="btn btn-primary">+ Check out an item</a>
+      <a href="{{ url_for('catalog') }}" class="btn btn-outline-dark">Browse catalog / availability</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const ctx = document.getElementById('stockChart');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: {{ chart_labels|tojson }},
+    datasets: [
+      { label: 'Available', data: {{ chart_available|tojson }}, backgroundColor: '#2f7d5a' },
+      { label: 'On loan', data: {{ chart_on_loan|tojson }}, backgroundColor: '#d94f3d' },
+    ]
+  },
+  options: {
+    responsive: true,
+    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } } },
+    plugins: { legend: { position: 'bottom' } }
+  }
+});
+</script>
+{% endblock %}

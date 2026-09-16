@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Catalog · AV Room{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1>Catalog &amp; availability</h1>
+  <form class="d-flex" role="search">
+    <input class="form-control" type="search" name="q" value="{{ q }}" placeholder="Search e.g. DSLR, mic...">
+    <button class="btn btn-outline-dark ms-2">Search</button>
+  </form>
+</div>
+
+<div class="row g-3">
+  {% for it in item_types %}
+  <div class="col-md-6 col-lg-4">
+    <div class="card h-100">
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between">
+          <h5 class="card-title mb-1">{{ it.name }}</h5>
+          <span class="badge text-bg-light">{{ it.category }}</span>
+        </div>
+        <p class="text-muted small mb-2">{{ it.description }}</p>
+        <p class="mb-1"><strong>{{ it.available_units()|length }}</strong> / {{ it.total_units() }} free right now</p>
+        {% if not it.available_units() %}
+          <p class="small text-danger mb-2">All out — next one free {{ hints[it.id].strftime('%d %b') if hints.get(it.id) else 'soon' }}.</p>
+        {% endif %}
+        <p class="small text-muted mb-3">₹{{ it.deposit_amount|int }} deposit · ₹{{ it.late_fee_per_day|int }}/day late fee</p>
+        <a href="{{ url_for('catalog_detail', item_type_id=it.id) }}" class="btn btn-outline-dark mt-auto">View units</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <p class="text-muted">No items match "{{ q }}".</p>
+  {% endfor %}
+</div>
+{% endblock %}

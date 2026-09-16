@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Return {{ loan.unit.code }} · AV Room{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('returns_list') }}" class="small">&larr; Back to active loans</a>
+<h1 class="mt-2">Return {{ loan.unit.code }}</h1>
+<p class="text-muted">{{ loan.unit.item_type.name }} &middot; borrowed by {{ loan.borrower.name }} ({{ loan.borrower.email }})</p>
+
+<div class="card" style="max-width: 480px;">
+  <div class="card-body">
+    <table class="table table-sm">
+      <tr><td>Checked out</td><td>{{ loan.checkout_date.strftime('%d %b %Y') }}</td></tr>
+      <tr><td>Due date</td><td>{{ loan.due_date.strftime('%d %b %Y') }}</td></tr>
+      <tr><td>Returning today</td><td>{{ preview_fee > 0 and 'late' or 'on time' }}</td></tr>
+      <tr><td>Deposit collected</td><td>₹{{ loan.deposit_collected|int }}</td></tr>
+      <tr><td>Late fee</td><td class="{{ 'text-danger' if preview_fee else '' }}">₹{{ preview_fee|int }}</td></tr>
+      <tr><th>Refund due</th><th>₹{{ preview_refund|int }}</th></tr>
+    </table>
+    <form method="POST">
+      <button class="btn btn-primary w-100">Confirm return</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

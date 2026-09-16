@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ b.name }} · AV Room{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('borrowers_list') }}" class="small">&larr; Back to borrowers</a>
+<h1 class="mt-2">{{ b.name }}</h1>
+<p class="text-muted">{{ b.email }} {% if b.phone %}&middot; {{ b.phone }}{% endif %} &middot; {{ b.active_loan_count() }} active loan(s)</p>
+
+<div class="table-responsive">
+<table class="table align-middle">
+  <thead><tr><th>Item</th><th>Out</th><th>Due</th><th>Returned</th><th>Late fee</th><th>Refund</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for l in loans %}
+    <tr>
+      <td>{{ l.unit.code }}</td>
+      <td>{{ l.checkout_date.strftime('%d %b') }}</td>
+      <td>{{ l.due_date.strftime('%d %b') }}</td>
+      <td>{{ l.return_date.strftime('%d %b') if l.return_date else '—' }}</td>
+      <td>{{ '₹%d'|format(l.late_fee_charged) if l.late_fee_charged is not none else '—' }}</td>
+      <td>{{ '₹%d'|format(l.deposit_refunded) if l.deposit_refunded is not none else '—' }}</td>
+      <td>
+        {% if l.status == 'active' %}
+          <span class="badge {{ 'bg-danger' if l.is_overdue() else 'bg-success' }}">
+            {{ 'overdue' if l.is_overdue() else 'active' }}
+          </span>
+        {% else %}
+          <span class="badge bg-secondary">returned</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7" class="text-muted">No loan history.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

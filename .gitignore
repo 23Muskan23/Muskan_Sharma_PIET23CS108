@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+rental.db
+.venv/
+venv/
+instance/

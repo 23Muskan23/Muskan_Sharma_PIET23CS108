@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ it.name }} · AV Room{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('catalog') }}" class="small">&larr; Back to catalog</a>
+<h1 class="mt-2">{{ it.name }}</h1>
+<p class="text-muted">{{ it.description }} &middot; ₹{{ it.deposit_amount|int }} deposit &middot; ₹{{ it.late_fee_per_day|int }}/day late fee</p>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">Units</h5>
+    {% for u in units %}
+      <div class="unit-chip">
+        <strong>{{ u.code }}</strong>
+        <span class="badge badge-{{ u.status }}">{{ u.status.replace('_',' ') }}</span>
+        {% if u.status == 'available' %}
+          <a href="{{ url_for('checkout', unit_id=u.id) }}" class="ms-1">borrow →</a>
+        {% else %}
+          <span class="text-muted small">free {{ u.active_loan().due_date.strftime('%d %b') if u.active_loan() else '' }}</span>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if not it.available_units() %}
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Join the waitlist</h5>
+    <p class="text-muted small">All units are out. Leave your details and you'll be first in line when one comes back.</p>
+    {% if waitlist %}
+      <p class="small text-muted">Currently waiting: {{ waitlist|length }} {{ 'person' if waitlist|length==1 else 'people' }}.</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('join_waitlist', item_type_id=it.id) }}" class="row g-2">
+      <div class="col-md-5"><input required name="name" class="form-control" placeholder="Your name"></div>
+      <div class="col-md-5"><input required type="email" name="email" class="form-control" placeholder="College email"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100">Join</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

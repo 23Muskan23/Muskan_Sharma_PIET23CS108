@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Borrowers · AV Room{% endblock %}
+{% block content %}
+
+<h1>Borrowers</h1>
+<div class="table-responsive">
+<table class="table align-middle">
+  <thead><tr><th>Name</th><th>Email</th><th>Active loans</th><th></th></tr></thead>
+  <tbody>
+  {% for b in borrowers %}
+    <tr>
+      <td>{{ b.name }}</td>
+      <td>{{ b.email }}</td>
+      <td>{{ b.active_loan_count() }}</td>
+      <td><a href="{{ url_for('borrower_detail', borrower_id=b.id) }}" class="btn btn-sm btn-outline-dark">History</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4" class="text-muted">No borrowers yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

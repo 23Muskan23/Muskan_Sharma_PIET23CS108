@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Check Out · AV Room{% endblock %}
+{% block content %}
+
+<h1>Check out an item</h1>
+<p class="text-muted">Deposit is collected at checkout and refunded (minus any late fee) on return.
+Max {{ max_loans }} active items per borrower at a time.</p>
+
+<div class="card" style="max-width: 640px;">
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Item type</label>
+        <select class="form-select" id="itemTypeSelect" required>
+          <option value="">Choose a type...</option>
+          {% for it in item_types %}
+            <option value="{{ it.id }}" {{ 'selected' if preselect_unit and it.units|selectattr('id','equalto',preselect_unit)|list }}>
+              {{ it.name }} ({{ it.available_units()|length }} free)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Unit</label>
+        <select class="form-select" name="unit_id" id="unitSelect" required>
+          <option value="">Select item type first</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Borrower name</label>
+          <input required class="form-control" name="name" placeholder="Full name">
+        </div>
+        <div class="col-md-6 mb-3">
+          <label class="form-label">College email</label>
+          <input required type="email" class="form-control" name="email" placeholder="you@college.edu">
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Phone (optional)</label>
+        <input class="form-control" name="phone">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Due back on</label>
+        <input type="date" class="form-control" name="due_date" value="{{ default_due }}" min="{{ default_due }}" required>
+      </div>
+
+      <button class="btn btn-primary w-100">Check out</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const itemData = {
+  {% for it in item_types %}
+  "{{ it.id }}": [{% for u in it.units if u.status == 'available' %}{id: {{ u.id }}, code: "{{ u.code }}"},{% endfor %}],
+  {% endfor %}
+};
+const typeSelect = document.getElementById('itemTypeSelect');
+const unitSelect = document.getElementById('unitSelect');
+
+function populateUnits() {
+  const units = itemData[typeSelect.value] || [];
+  unitSelect.innerHTML = '';
+  if (!units.length) {
+    unitSelect.innerHTML = '<option value="">No units free — check waitlist</option>';
+    return;
+  }
+  unitSelect.innerHTML = units.map(u => `<option value="${u.id}">${u.code}</option>`).join('');
+  {% if preselect_unit %}
+  const pre = document.querySelector(`option[value="{{ preselect_unit }}"]`);
+  if (pre) unitSelect.value = "{{ preselect_unit }}";
+  {% endif %}
+}
+typeSelect.addEventListener('change', populateUnits);
+
+{% if preselect_unit %}
+// pre-select the item type that owns this unit
+for (const [typeId, units] of Object.entries(itemData)) {
+  if (units.some(u => u.id === {{ preselect_unit }})) {
+    typeSelect.value = typeId;
+  }
+}
+{% endif %}
+populateUnits();
+</script>
+{% endblock %}
